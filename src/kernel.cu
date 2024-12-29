@@ -434,9 +434,9 @@ __global__ void kernUpdateVelNeighborSearchScattered(
     float xDir = 1, yDir = 1, zDir = 1;
     // TODO: Can be optimized
     glm::ivec3 pGridIndex = glm::ivec3(
-        std::max(0.0f, floor((boidPosition.x - halfCellWidth - gridMin.x) * inverseCellWidth)),
-        std::max(0.0f, floor((boidPosition.y - halfCellWidth - gridMin.y) * inverseCellWidth)),
-        std::max(0.0f, floor((boidPosition.z - halfCellWidth - gridMin.z) * inverseCellWidth))
+        imax(0.0f, floor((boidPosition.x - halfCellWidth - gridMin.x) * inverseCellWidth)),
+        imax(0.0f, floor((boidPosition.y - halfCellWidth - gridMin.y) * inverseCellWidth)),
+        imax(0.0f, floor((boidPosition.z - halfCellWidth - gridMin.z) * inverseCellWidth))
     );
     xDir += (gridIndex.x - pGridIndex.x) * 2;
     yDir += (gridIndex.y - pGridIndex.y) * 2;
@@ -456,7 +456,7 @@ __global__ void kernUpdateVelNeighborSearchScattered(
                 int grid1DIndex = gridIndex3Dto1D(gridX, gridY, gridZ, gridResolution);
 
                 int startIndex = gridCellStartIndices[grid1DIndex];
-                int endIndex = dev_gridCellEndIndices[grid1DIndex];
+                int endIndex = gridCellEndIndices[grid1DIndex];
 
                 for (int l = startIndex; l < endIndex && l > 0 ; l++) {
                     int neighborBoidIndex = particleArrayIndices[l];
