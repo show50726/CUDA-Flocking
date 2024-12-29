@@ -303,7 +303,7 @@ __global__ void kernUpdateVelocityBruteForce(int N, glm::vec3 *pos,
   // Clamp the speed
     float speed = newVel.length();
     if (speed > maxSpeed) {
-        newVel = glm::normalize(newVel);
+        newVel = glm::normalize(newVel) * maxSpeed;
     }
     
   // Record the new velocity into vel2. Question: why NOT vel1?
@@ -454,32 +454,34 @@ __global__ void kernUpdateVelNeighborSearchScattered(
                 int gridX = gridIndex.x + i * xDir;
                 int gridY = gridIndex.y + j * yDir;
                 int gridZ = gridIndex.z + k * zDir;
-                int grid1DIndex = gridIndex3Dto1D(gridX, gridY, gridZ, gridResolution);
+                if (gridX < gridResolution && gridY < gridResolution && gridZ < gridResolution) {
+                    int grid1DIndex = gridIndex3Dto1D(gridX, gridY, gridZ, gridResolution);
 
-                int startIndex = gridCellStartIndices[grid1DIndex];
-                int endIndex = gridCellEndIndices[grid1DIndex];
+                    int startIndex = gridCellStartIndices[grid1DIndex];
+                    int endIndex = gridCellEndIndices[grid1DIndex];
 
-                if (startIndex > 0) {
-                    for (int l = startIndex; l < endIndex; l++) {
-                        int neighborBoidIndex = particleArrayIndices[l];
-                        glm::vec3 neighborBoidPos = pos[neighborBoidIndex];
-                        glm::vec3 neighborBoidVel = vel1[neighborBoidIndex];
-                        float distance = glm::distance(neighborBoidPos, boidPosition);
-                        // Rule 1: boids fly towards their local perceived center of mass, which excludes themselves
-                        if (index != neighborBoidIndex && distance <= rule1Distance) {
-                            neighborCount1++;
-                            perceivedCenter += neighborBoidPos;
-                        }
+                    if (startIndex > 0) {
+                        for (int l = startIndex; l < endIndex; l++) {
+                            int neighborBoidIndex = particleArrayIndices[l];
+                            glm::vec3 neighborBoidPos = pos[neighborBoidIndex];
+                            glm::vec3 neighborBoidVel = vel1[neighborBoidIndex];
+                            float distance = glm::distance(neighborBoidPos, boidPosition);
+                            // Rule 1: boids fly towards their local perceived center of mass, which excludes themselves
+                            if (index != neighborBoidIndex && distance <= rule1Distance) {
+                                neighborCount1++;
+                                perceivedCenter += neighborBoidPos;
+                            }
 
-                        // Rule 2: boids try to stay a distance d away from each other
-                        if (index != neighborBoidIndex && distance <= rule2Distance) {
-                            c -= (neighborBoidPos - boidPosition);
-                        }
+                            // Rule 2: boids try to stay a distance d away from each other
+                            if (index != neighborBoidIndex && distance <= rule2Distance) {
+                                c -= (neighborBoidPos - boidPosition);
+                            }
 
-                        // Rule 3: boids try to match the speed of surrounding boids
-                        if (index != neighborBoidIndex && distance <= rule3Distance) {
-                            perceivedVel += neighborBoidVel;
-                            neighborCount2++;
+                            // Rule 3: boids try to match the speed of surrounding boids
+                            if (index != neighborBoidIndex && distance <= rule3Distance) {
+                                perceivedVel += neighborBoidVel;
+                                neighborCount2++;
+                            }
                         }
                     }
                 }
@@ -503,7 +505,7 @@ __global__ void kernUpdateVelNeighborSearchScattered(
     glm::vec3 newVel = vel1[index] + rule1Vel + rule2Vel + rule3Vel;
     float speed = newVel.length();
     if (speed > maxSpeed) {
-        newVel = glm::normalize(newVel);
+        newVel = glm::normalize(newVel) * maxSpeed;
     }
 
     vel2[index] = newVel;
