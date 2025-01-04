@@ -302,7 +302,7 @@ __global__ void kernUpdateVelocityBruteForce(int N, glm::vec3 *pos,
     glm::vec3 newVel = computeVelocityChange(N, index, pos, vel1);
    
   // Clamp the speed
-    float speed = newVel.length();
+    float speed = glm::length(newVel);
     if (speed > maxSpeed) {
         newVel = glm::normalize(newVel) * maxSpeed;
     }
@@ -504,9 +504,9 @@ __global__ void kernUpdateVelNeighborSearchScattered(
     }
 
     glm::vec3 newVel = vel1[index] + rule1Vel + rule2Vel + rule3Vel;
-    float speed = newVel.length();
+    float speed = glm::length(newVel);
     if (speed > maxSpeed) {
-        newVel = glm::normalize(newVel) * maxSpeed;
+        newVel = newVel * (maxSpeed / speed);
     }
 
     vel2[index] = newVel;
@@ -587,11 +587,11 @@ void Boids::stepSimulationScatteredGrid(float dt) {
         gridMinimum, gridInverseCellWidth, gridCellWidth, dev_gridCellStartIndices, dev_gridCellEndIndices,
         dev_particleArrayIndices, dev_pos, dev_vel1, dev_vel2);
     checkCUDAErrorWithLine("kernUpdateVelNeighborSearchScattered failed!");
-
+    cudaDeviceSynchronize();
     // - Update positions
     kernUpdatePos << <fullBlocksPerGridBoid, blockSize >> > (numObjects, dt, dev_pos, dev_vel2);
     checkCUDAErrorWithLine("kernUpdatePos failed!");
-
+    cudaDeviceSynchronize();
 
     // - Ping-pong buffers as needed
     glm::vec3* temp = dev_vel1;
