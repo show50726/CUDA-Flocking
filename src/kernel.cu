@@ -462,7 +462,7 @@ __global__ void kernUpdateVelNeighborSearchScattered(
                     int endIndex = gridCellEndIndices[grid1DIndex];
 
                     if (startIndex > 0) {
-                        for (int l = startIndex; l < endIndex; l++) {
+                        for (int l = startIndex; l <= endIndex; l++) {
                             int neighborBoidIndex = particleArrayIndices[l];
                             glm::vec3 neighborBoidPos = pos[neighborBoidIndex];
                             glm::vec3 neighborBoidVel = vel1[neighborBoidIndex];
@@ -578,7 +578,7 @@ void Boids::stepSimulationScatteredGrid(float dt) {
 
     // - Naively unroll the loop for finding the start and end indices of each
     //   cell's data pointers in the array of boid indices
-    kernIdentifyCellStartEnd << <fullBlocksPerGridCell, blockSize >> > (numObjects, dev_particleGridIndices,
+    kernIdentifyCellStartEnd << <fullBlocksPerGridBoid, blockSize >> > (numObjects, dev_particleGridIndices,
         dev_gridCellStartIndices, dev_gridCellEndIndices);
     checkCUDAErrorWithLine("kernIdentifyCellStartEnd failed!");
 
