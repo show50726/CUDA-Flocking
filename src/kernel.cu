@@ -297,6 +297,15 @@ __global__ void kernUpdateVelocityBruteForce(int N, glm::vec3* pos,
 	vel2[index] = newVel;
 }
 
+__device__ glm::ivec3 positionTo3DGridIndex(glm::vec3 position, glm::vec3 gridMin,
+	int gridResolution, float inverseCellWidth) {
+	return glm::ivec3(
+		imax(0, imin(gridResolution - 1, floor((position.x - gridMin.x) * inverseCellWidth))),
+		imax(0, imin(gridResolution - 1, floor((position.y - gridMin.y) * inverseCellWidth))),
+		imax(0, imin(gridResolution - 1, floor((position.z - gridMin.z) * inverseCellWidth)))
+	);
+}
+
 /**
 * For each of the `N` bodies, update its position based on its current velocity.
 */
@@ -343,11 +352,8 @@ __global__ void kernComputeIndices(int N, int gridResolution,
 	}
 
 	glm::vec3 position = pos[boidIndex];
-	glm::ivec3 gridIndex = glm::ivec3(
-		imax(0, imin(gridResolution - 1, floor((position.x - gridMin.x) * inverseCellWidth))),
-		imax(0, imin(gridResolution - 1, floor((position.y - gridMin.y) * inverseCellWidth))),
-		imax(0, imin(gridResolution - 1, floor((position.z - gridMin.z) * inverseCellWidth)))
-	);
+	glm::ivec3 gridIndex = positionTo3DGridIndex(position, gridMin, gridResolution, 
+		inverseCellWidth);
 
 	int grid1DIndex = gridIndex3Dto1D(gridIndex.x, gridIndex.y, gridIndex.z, gridResolution);
 
@@ -403,23 +409,15 @@ __global__ void kernUpdateVelNeighborSearchScattered(
 
 	// - Identify the grid cell that this particle is in
 	glm::vec3 boidPosition = pos[index];
-	glm::ivec3 gridIndex = glm::ivec3(
-		imax(0, imin(gridResolution - 1, floor((boidPosition.x - gridMin.x) * inverseCellWidth))),
-		imax(0, imin(gridResolution - 1, floor((boidPosition.y - gridMin.y) * inverseCellWidth))),
-		imax(0, imin(gridResolution - 1, floor((boidPosition.z - gridMin.z) * inverseCellWidth)))
-	);
+	glm::ivec3 gridIndex = positionTo3DGridIndex(boidPosition, gridMin,
+		gridResolution, inverseCellWidth);
 
-	float halfCellWidth = cellWidth * 0.5f;
-	float xDir = 1, yDir = 1, zDir = 1;
-	// TODO: Can be optimized
-	glm::ivec3 pGridIndex = glm::ivec3(
-		imax(0, floor((boidPosition.x - halfCellWidth - gridMin.x) * inverseCellWidth)),
-		imax(0, floor((boidPosition.y - halfCellWidth - gridMin.y) * inverseCellWidth)),
-		imax(0, floor((boidPosition.z - halfCellWidth - gridMin.z) * inverseCellWidth))
-	);
-	xDir += (pGridIndex.x - gridIndex.x) * 2;
-	yDir += (pGridIndex.y - gridIndex.y) * 2;
-	zDir += (pGridIndex.z - gridIndex.z) * 2;
+	// - Identify which cells may contain neighbors. This isn't always 8.
+	glm::vec3 range = glm::vec3(cellWidth * 0.5f, cellWidth * 0.5f, cellWidth * 0.5f);
+	glm::ivec3 minGridIndex = positionTo3DGridIndex(boidPosition - range, gridMin,
+		gridResolution, inverseCellWidth);
+	glm::ivec3 maxGridIndex = positionTo3DGridIndex(boidPosition + range, gridMin,
+		gridResolution, inverseCellWidth);
 
 	glm::vec3 perceivedCenter = glm::vec3(0, 0, 0);
 	glm::vec3 perceivedVel = glm::vec3(0, 0, 0);
@@ -427,13 +425,11 @@ __global__ void kernUpdateVelNeighborSearchScattered(
 	int neighborCount1 = 0;
 	int neighborCount2 = 0;
 	// - Identify which cells may contain neighbors.
-	for (int i = 0; i <= 1; i++) {
-		for (int j = 0; j <= 1; j++) {
-			for (int k = 0; k <= 1; k++) {
-				int gridX = gridIndex.x + i * xDir;
-				int gridY = gridIndex.y + j * yDir;
-				int gridZ = gridIndex.z + k * zDir;
-				if (gridX >= 0 && gridX < gridResolution && gridY >= 0 && gridY < gridResolution && gridZ >= 0 && gridZ < gridResolution) {
+	for (int gridZ = minGridIndex.z; gridZ <= maxGridIndex.z; gridZ++) {
+		for (int gridY = minGridIndex.y; gridY <= maxGridIndex.y; gridY++) {
+			for (int gridX = minGridIndex.x; gridX <= maxGridIndex.x; gridX++) {
+				if (gridX >= 0 && gridX < gridResolution && gridY >= 0 && gridY < gridResolution 
+					&& gridZ >= 0 && gridZ < gridResolution) {
 					int grid1DIndex = gridIndex3Dto1D(gridX, gridY, gridZ, gridResolution);
 					// - For each cell, read the start/end indices in the boid pointer array.
 					int startIndex = gridCellStartIndices[grid1DIndex];
@@ -491,15 +487,6 @@ __global__ void kernUpdateVelNeighborSearchScattered(
 	}
 
 	vel2[index] = newVel;
-}
-
-__device__ glm::ivec3 positionTo3DGridIndex(glm::vec3 position, glm::vec3 gridMin,
-	int gridResolution, float inverseCellWidth) {
-	return glm::ivec3(
-		imax(0, imin(gridResolution - 1, floor((position.x - gridMin.x) * inverseCellWidth))),
-		imax(0, imin(gridResolution - 1, floor((position.y - gridMin.y) * inverseCellWidth))),
-		imax(0, imin(gridResolution - 1, floor((position.z - gridMin.z) * inverseCellWidth)))
-	);
 }
 
 __global__ void kernUpdateVelNeighborSearchCoherent(
