@@ -1,11 +1,29 @@
 **University of Pennsylvania, CIS 5650: GPU Programming and Architecture,
 Project 1 - Flocking**
 
-* (TODO) YOUR NAME HERE
-  * (TODO) [LinkedIn](), [personal website](), [twitter](), etc.
-* Tested on: (TODO) Windows 22, i7-2222 @ 2.22GHz 22GB, GTX 222 222MB (Moore 2222 Lab)
+## CUDA Flocking Simulation
+This project is a CUDA-based boids flocking simulation. 
+![](images//boid.gif)
 
-### (TODO: Your README)
+It provides 3 different implementations based on different spatial optimizations:
+- Naive Implementation
+- Uniform Grids
+- Coherent Uniform Grids
 
-Include screenshots, analysis, etc. (Remember, this is public, so don't put
-anything here that you don't want to share with the world.)
+
+## Performance Analysis
+
+All the results below were tested on: Windows 10, i7-7700 @ 3.60GHz 16GB, GTX 1080 8GB
+
+### Performance Over Boid Count (No Visualization)
+// TODO
+
+### Performance Over Boid Count (With Visualization)
+// TODO
+
+### Performance Over Block Size (No Visualization)
+// TODO
+
+### Performance over Cell Size (No Visualization)
+// TODO
+
