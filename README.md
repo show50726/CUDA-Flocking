@@ -10,6 +10,80 @@ It provides 3 different implementations based on different spatial optimizations
 - Uniform Grids
 - Coherent Uniform Grids
 
+## Boid Simulation Algorithm
+
+In the Boids flocking simulation, particles representing birds or fish
+(boids) move around the simulation space according to three rules:
+
+1. cohesion - boids move towards the perceived center of mass of their neighbors
+2. separation - boids avoid getting to close to their neighbors
+3. alignment - boids generally try to move with the same direction and speed as
+their neighbors
+
+These three rules specify a boid's velocity change in a timestep.
+At every timestep, a boid thus has to look at each of its neighboring boids
+and compute the velocity change contribution from each of the three rules.
+Thus, a bare-bones boids implementation has each boid check every other boid in
+the simulation.
+
+Here are the pseudocode of the 3 rules above:
+
+#### Rule 1: Boids try to fly towards the centre of mass of neighbouring boids
+
+```
+function rule1(Boid boid)
+
+    Vector perceived_center
+
+    foreach Boid b:
+        if b != boid and distance(b, boid) < rule1Distance then
+            perceived_center += b.position
+        endif
+    end
+
+    perceived_center /= number_of_neighbors
+
+    return (perceived_center - boid.position) * rule1Scale
+end
+```
+
+#### Rule 2: Boids try to keep a small distance away from other objects (including other boids).
+
+```
+function rule2(Boid boid)
+
+    Vector c = 0
+
+    foreach Boid b
+        if b != boid and distance(b, boid) < rule2Distance then
+            c -= (b.position - boid.position)
+        endif
+    end
+
+    return c * rule2Scale
+end
+```
+
+#### Rule 3: Boids try to match velocity with near boids.
+
+```
+function rule3(Boid boid)
+
+    Vector perceived_velocity
+
+    foreach Boid b
+        if b != boid and distance(b, boid) < rule3Distance then
+            perceived_velocity += b.velocity
+        endif
+    end
+
+    perceived_velocity /= number_of_neighbors
+
+    return perceived_velocity * rule3Scale
+end
+```
+
+(This section is from `INSTRUCTION.md`)
 
 ## Performance Analysis
 
@@ -21,9 +95,9 @@ All the results below were tested on: Windows 10, i7-7700 @ 3.60GHz 16GB, GTX 10
 ### Performance Over Boid Count (With Visualization)
 ![](images//number_of_boids_to_fps(viz).png))
 
-We can see as the boid number increases, FPS of all the methods decrease. Since the naive method has the O(n<sup>2</sup>) complexity, the FPS decreases significantly as the boid number increases. In contract, the other 2 methods are doing a better job here.
+Generally, as we normally expected, the FPS decreases as the boid number raises, since when there're more boids in the scene, there will be more computations to be done. At the same time, more warps need to be dispatch and calculate. Also note that when we disable the visualization, the FPS will be slightly improved since we can get rid of drawing cost.
 
-As we normally expected, the FPS decreases as the boid number raises, since when there're more boids in the scene, there will be more computations to be done. At the same time, more warps need to be dispatch and calculate. Also note that when we disable the visualization, the FPS will be slightly improved since we can get rid of drawing cost.
+To be more specific, we can see as the boid number increases, FPS of all the methods decrease. Since the naive method has the O(n<sup>2</sup>) complexity, the FPS decreases significantly as the boid number increases. For the coherent grid method, because we sort the `pos` and `vel` array before accessing, we can further improve the performance by reducing the cache miss (more sequential access to the memory). So we get the best performance for the coherent grid method.
 
 ### Performance Over Block Size (No Visualization)
 ![](images//block_size_to_fps.png)
