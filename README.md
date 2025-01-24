@@ -16,14 +16,14 @@ It provides 3 different implementations based on different spatial optimizations
 All the results below were tested on: Windows 10, i7-7700 @ 3.60GHz 16GB, GTX 1080 8GB
 
 ### Performance Over Boid Count (No Visualization)
-// TODO
+![](images//number_of_boids_to_fps.png)
 
 ### Performance Over Boid Count (With Visualization)
-// TODO
+![](images//number_of_boids_to_fps(viz).png))
 
 ### Performance Over Block Size (No Visualization)
-// TODO
+![](images//block_size_to_fps.png)
 
 ### Performance over Cell Size (No Visualization)
-// TODO
+![](images//block_size_to_fps(viz).png)
 
