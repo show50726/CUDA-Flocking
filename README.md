@@ -83,7 +83,45 @@ function rule3(Boid boid)
 end
 ```
 
-(This section is from `INSTRUCTION.md`)
+### Naive
+In Naive method, we brute force search for all neighbor boids and calculate the new velocity. Which is a O(n<sup>2</sup>) solution.
+
+### Uniform Grid
+A uniform grid is made up of cells that are at least as wide as the neighborhood
+distance and covers the entire simulation domain.
+Before computing the new velocities of the boids, we "bin" them into the grid in
+a preprocess step.
+![a uniform grid in 2D](images/Boids%20Ugrid%20base.png)
+
+If the cell width is double the neighborhood distance, each boid only has to be
+checked against other boids in 8 cells, or 4 in the 2D case.
+
+![a uniform grid in 2D with neighborhood and cells to search for some particles shown](images/Boids%20Ugrid%20neighbor%20search%20shown.png)
+
+We will construct the uniform grid by sorting. If we label each boid
+with an index representing its enclosing cell and then sort the list of
+boids by these indices, we can ensure that pointers to boids in the same cells
+are contiguous in memory.
+
+Then, we can walk over the array of sorted uniform grid indices and look at
+every pair of values. If the values differ, we know that we are at the border
+of the representation of two different cells. Storing these locations in a table
+with an entry for each cell gives us a complete representation of the uniform
+grid. This "table" can just be an array with as much space as there are cells.
+This process is data parallel and can be naively parallelized.
+![buffers for generating a uniform grid using index sort](images/Boids%20Ugrids%20buffers%20naive.png)
+
+### Coherent Uniform Grid
+
+Consider the Uniform Grid method: pointers to boids in
+a single cell are contiguous in memory, but the boid data itself (velocities and
+positions) is scattered all over the place. We can further rearrange the boid data
+itself so that all the velocities and positions of boids in one cell are also
+contiguous in memory.
+
+![buffers for generating a uniform grid using index sort, then making the boid data coherent](images/Boids%20Ugrids%20buffers%20data%20coherent.png)
+
+(Most of this section is from `INSTRUCTION.md`)
 
 ## Performance Analysis
 
