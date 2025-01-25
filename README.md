@@ -84,7 +84,7 @@ end
 ```
 
 ### Naive
-In Naive method, we brute force search for all neighbor boids and calculate the new velocity. Which is a O(n<sup>2</sup>) solution.
+In Naive method, we brute force check all boids in the scene and determine which of them should be involved in the velocity update calculation, then calculate the new velocity. Which is a O(n<sup>2</sup>) solution.
 
 ### Uniform Grid
 A uniform grid is made up of cells that are at least as wide as the neighborhood
