@@ -1,6 +1,3 @@
-**University of Pennsylvania, CIS 5650: GPU Programming and Architecture,
-Project 1 - Flocking**
-
 ## CUDA Flocking Simulation
 This project is a CUDA-based boids flocking simulation. 
 ![](images//boid.gif)
@@ -9,6 +6,9 @@ It provides 3 different implementations based on different spatial optimizations
 - Naive Implementation
 - Uniform Grids
 - Coherent Uniform Grids
+
+This project template is forker from **University of Pennsylvania, CIS 5650: GPU Programming and Architecture,
+Project 1 - Flocking**
 
 ## Boid Simulation Algorithm
 
